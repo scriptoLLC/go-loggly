@@ -27,12 +27,9 @@ type Level int
 const (
 	DEBUG Level = iota
 	INFO
-	NOTICE
 	WARNING
 	ERROR
-	CRITICAL
-	ALERT
-	EMERGENCY
+	FATAL
 )
 
 // Loggly client.
@@ -94,7 +91,7 @@ func (c *Client) Send(msg Message) error {
 	if _, exists := msg["timestamp"]; !exists {
 		msg["timestamp"] = time.Now().UnixNano() / int64(time.Millisecond)
 	}
-	merge(msg, c.Defaults)
+	Merge(msg, c.Defaults)
 
 	json, err := Marshal(msg)
 	if err != nil {
@@ -137,86 +134,6 @@ func (c *Client) Write(b []byte) (int, error) {
 	}
 
 	return len(b), nil
-}
-
-// Debug log.
-func (c *Client) Debug(t string, props ...Message) error {
-	if c.Level > DEBUG {
-		return nil
-	}
-	msg := Message{"level": "debug", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Info log.
-func (c *Client) Info(t string, props ...Message) error {
-	if c.Level > INFO {
-		return nil
-	}
-	msg := Message{"level": "info", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Notice log.
-func (c *Client) Notice(t string, props ...Message) error {
-	if c.Level > NOTICE {
-		return nil
-	}
-	msg := Message{"level": "notice", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Warning log.
-func (c *Client) Warn(t string, props ...Message) error {
-	if c.Level > WARNING {
-		return nil
-	}
-	msg := Message{"level": "warning", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Error log.
-func (c *Client) Error(t string, props ...Message) error {
-	if c.Level > ERROR {
-		return nil
-	}
-	msg := Message{"level": "error", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Critical log.
-func (c *Client) Critical(t string, props ...Message) error {
-	if c.Level > CRITICAL {
-		return nil
-	}
-	msg := Message{"level": "critical", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Alert log.
-func (c *Client) Alert(t string, props ...Message) error {
-	if c.Level > ALERT {
-		return nil
-	}
-	msg := Message{"level": "alert", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
-}
-
-// Emergency log.
-func (c *Client) Emergency(t string, props ...Message) error {
-	if c.Level > EMERGENCY {
-		return nil
-	}
-	msg := Message{"level": "emergency", "type": t}
-	merge(msg, props...)
-	return c.Send(msg)
 }
 
 // Flush the buffered messages.
@@ -297,7 +214,7 @@ func (c *Client) start() {
 }
 
 // Merge others into a.
-func merge(a Message, others ...Message) {
+func Merge(a Message, others ...Message) {
 	for _, msg := range others {
 		for k, v := range msg {
 			a[k] = v
